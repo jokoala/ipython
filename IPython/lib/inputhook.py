@@ -23,6 +23,9 @@ except SystemError: # IronPython issue, 2/8/2014
 import os
 import sys
 from distutils.version import LooseVersion as V
+if sys.platform.startswith("java"):
+    # Jython ctypes does not support PYFUNC, so disable it
+    ctypes = None
 
 from IPython.utils.warn import warn
 
@@ -108,6 +111,7 @@ class InputHookManager(object):
     def __init__(self):
         if ctypes is None:
             warn("IPython GUI event loop requires ctypes, %gui will not be available")
+            self.guihooks = {}
             return
         self.PYFUNC = ctypes.PYFUNCTYPE(ctypes.c_int)
         self.guihooks = {}
@@ -197,6 +201,8 @@ class InputHookManager(object):
                 def enable(self, app=None):
                     ...
         """
+        if ctypes is None:
+            return lambda x:x
         def decorator(cls):
             inst = cls(self)
             self.guihooks[toolkitname] = inst

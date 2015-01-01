@@ -28,6 +28,7 @@ Authors
 from __future__ import print_function
 
 # Stdlib imports
+import sys
 import __future__
 from ast import PyCF_ONLY_AST
 import codeop
@@ -36,6 +37,10 @@ import hashlib
 import linecache
 import operator
 import time
+
+_IS_JYTHON = sys.platform.startswith("java")
+if _IS_JYTHON:
+    from org.python.core import CompilerFlags
 
 #-----------------------------------------------------------------------------
 # Constants
@@ -104,6 +109,15 @@ class CachingCompiler(codeop.Compile):
         # This value is copied from codeop.Compile.__init__, so if that ever
         # changes, it will need to be updated.
         self.flags = codeop.PyCF_DONT_IMPLY_DEDENT
+
+    if _IS_JYTHON:
+        @property
+        def flags(self):
+            return self._cflags.toBits()
+
+        @flags.setter
+        def flags(self, f):
+            self._cflags = CompilerFlags(f)
 
     @property
     def compiler_flags(self):
